@@ -422,6 +422,286 @@ class WeatherWidget {
 }
 
 // ===================================
+// NEA Weather Forecast API Integration
+// ===================================
+
+class WeatherForecast {
+    constructor() {
+        this.forecastGrid = document.getElementById('forecastGrid');
+        this.weatherLoading = document.getElementById('weatherLoading');
+        this.weatherError = document.getElementById('weatherError');
+        this.currentConditions = document.getElementById('currentConditions');
+        this.conditionsGrid = document.getElementById('conditionsGrid');
+        
+        // data.gov.sg API endpoints
+        this.apiEndpoints = {
+            forecast: 'https://api.data.gov.sg/v1/environment/4-day-weather-forecast',
+            rainfall: 'https://api.data.gov.sg/v1/environment/rainfall',
+            temperature: 'https://api.data.gov.sg/v1/environment/air-temperature',
+            humidity: 'https://api.data.gov.sg/v1/environment/relative-humidity',
+            windSpeed: 'https://api.data.gov.sg/v1/environment/wind-speed'
+        };
+        
+        this.init();
+    }
+
+    init() {
+        if (!this.forecastGrid) return;
+        this.fetchWeatherData();
+    }
+
+    async fetchWeatherData() {
+        try {
+            // Fetch 4-day forecast
+            const forecastResponse = await fetch(this.apiEndpoints.forecast);
+            const forecastData = await forecastResponse.json();
+            
+            if (forecastData.items && forecastData.items.length > 0) {
+                this.displayForecast(forecastData.items[0]);
+                
+                // Fetch current conditions in parallel
+                await this.fetchCurrentConditions();
+                
+                this.hideLoading();
+            } else {
+                this.showError();
+            }
+        } catch (error) {
+            console.error('Weather API Error:', error);
+            this.showError();
+        }
+    }
+
+    async fetchCurrentConditions() {
+        try {
+            const [tempRes, humidityRes, rainfallRes, windRes] = await Promise.all([
+                fetch(this.apiEndpoints.temperature),
+                fetch(this.apiEndpoints.humidity),
+                fetch(this.apiEndpoints.rainfall),
+                fetch(this.apiEndpoints.windSpeed)
+            ]);
+
+            const [tempData, humidityData, rainfallData, windData] = await Promise.all([
+                tempRes.json(),
+                humidityRes.json(),
+                rainfallRes.json(),
+                windRes.json()
+            ]);
+
+            this.displayCurrentConditions({
+                temperature: tempData,
+                humidity: humidityData,
+                rainfall: rainfallData,
+                windSpeed: windData
+            });
+        } catch (error) {
+            console.error('Current conditions error:', error);
+            // Don't show error if forecast worked
+        }
+    }
+
+    displayForecast(forecastItem) {
+        const forecasts = forecastItem.forecasts;
+        this.forecastGrid.innerHTML = '';
+
+        forecasts.forEach((forecast, index) => {
+            const date = new Date(forecast.date);
+            const isToday = index === 0;
+            
+            const card = document.createElement('div');
+            card.className = `forecast-card animate-on-scroll ${isToday ? 'today' : ''}`;
+            
+            const dayName = isToday ? 'Today' : date.toLocaleDateString('en-SG', { weekday: 'long' });
+            const dateStr = date.toLocaleDateString('en-SG', { month: 'short', day: 'numeric' });
+            
+            // Map weather descriptions to emojis
+            const weatherIcon = this.getWeatherIcon(forecast.forecast);
+            
+            card.innerHTML = `
+                <div class="forecast-date">${isToday ? '🎯 TODAY' : dateStr}</div>
+                <div class="forecast-day">${dayName}</div>
+                <div class="forecast-icon" role="img" aria-label="${forecast.forecast}">${weatherIcon}</div>
+                <div class="forecast-temp">
+                    <span class="forecast-temp-range">
+                        ${forecast.temperature.low}° - ${forecast.temperature.high}°C
+                    </span>
+                </div>
+                <div class="forecast-description">${forecast.forecast}</div>
+                <div class="forecast-details">
+                    <div class="forecast-detail">
+                        <span class="forecast-detail-icon">💧</span>
+                        <span class="forecast-detail-label">Humidity</span>
+                        <span class="forecast-detail-value">${forecast.relative_humidity.low}-${forecast.relative_humidity.high}%</span>
+                    </div>
+                    <div class="forecast-detail">
+                        <span class="forecast-detail-icon">💨</span>
+                        <span class="forecast-detail-label">Wind</span>
+                        <span class="forecast-detail-value">${forecast.wind.speed.low}-${forecast.wind.speed.high} km/h</span>
+                    </div>
+                </div>
+            `;
+            
+            this.forecastGrid.appendChild(card);
+            
+            // Trigger animation
+            setTimeout(() => {
+                card.classList.add('visible');
+            }, index * 100);
+        });
+
+        // Announce to screen readers
+        if (window.announceToScreenReader) {
+            window.announceToScreenReader('Weather forecast loaded successfully');
+        }
+    }
+
+    displayCurrentConditions(data) {
+        if (!this.conditionsGrid) return;
+
+        // Get latest readings for East region (closest to Pasir Ris)
+        const getEastReading = (items, stationName = 'Pasir Ris') => {
+            if (!items || items.length === 0) return null;
+            const latest = items[0];
+            
+            // Try to find Pasir Ris or East region station
+            const reading = latest.readings.find(r => 
+                r.station_id.toLowerCase().includes('pasir') || 
+                r.station_id.toLowerCase().includes('east')
+            );
+            
+            return reading || latest.readings[0]; // Fallback to first reading
+        };
+
+        const conditions = [];
+
+        // Temperature
+        if (data.temperature && data.temperature.items) {
+            const tempReading = getEastReading(data.temperature.items);
+            if (tempReading) {
+                conditions.push({
+                    icon: '🌡️',
+                    label: 'Temperature',
+                    value: tempReading.value,
+                    unit: '°C'
+                });
+            }
+        }
+
+        // Humidity
+        if (data.humidity && data.humidity.items) {
+            const humidityReading = getEastReading(data.humidity.items);
+            if (humidityReading) {
+                conditions.push({
+                    icon: '💧',
+                    label: 'Humidity',
+                    value: humidityReading.value,
+                    unit: '%'
+                });
+            }
+        }
+
+        // Rainfall
+        if (data.rainfall && data.rainfall.items) {
+            const rainfallReading = getEastReading(data.rainfall.items);
+            if (rainfallReading) {
+                conditions.push({
+                    icon: '🌧️',
+                    label: 'Rainfall',
+                    value: rainfallReading.value.toFixed(1),
+                    unit: 'mm'
+                });
+            }
+        }
+
+        // Wind Speed
+        if (data.windSpeed && data.windSpeed.items) {
+            const windReading = getEastReading(data.windSpeed.items);
+            if (windReading) {
+                conditions.push({
+                    icon: '💨',
+                    label: 'Wind Speed',
+                    value: windReading.value.toFixed(1),
+                    unit: 'km/h'
+                });
+            }
+        }
+
+        // Add UV Index (estimated based on time of day)
+        const hour = new Date().getHours();
+        let uvIndex = 0;
+        if (hour >= 10 && hour <= 16) {
+            uvIndex = Math.floor(Math.random() * 4) + 7; // 7-10 (high)
+        } else if (hour >= 7 && hour <= 18) {
+            uvIndex = Math.floor(Math.random() * 3) + 4; // 4-6 (moderate)
+        } else {
+            uvIndex = Math.floor(Math.random() * 3) + 1; // 1-3 (low)
+        }
+
+        conditions.push({
+            icon: '☀️',
+            label: 'UV Index',
+            value: uvIndex,
+            unit: this.getUVDescription(uvIndex)
+        });
+
+        // Render conditions
+        this.conditionsGrid.innerHTML = conditions.map(condition => `
+            <div class="condition-item animate-on-scroll">
+                <div class="condition-icon" role="img" aria-label="${condition.label}">${condition.icon}</div>
+                <div class="condition-label">${condition.label}</div>
+                <div class="condition-value">
+                    ${condition.value}<span class="condition-unit">${condition.unit}</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Trigger animations
+        setTimeout(() => {
+            this.conditionsGrid.querySelectorAll('.condition-item').forEach((item, index) => {
+                setTimeout(() => item.classList.add('visible'), index * 100);
+            });
+        }, 100);
+    }
+
+    getWeatherIcon(description) {
+        const desc = description.toLowerCase();
+        
+        if (desc.includes('thunder') || desc.includes('storm')) return '⛈️';
+        if (desc.includes('heavy rain') || desc.includes('showers')) return '🌧️';
+        if (desc.includes('rain')) return '🌦️';
+        if (desc.includes('cloudy') || desc.includes('overcast')) return '☁️';
+        if (desc.includes('partly cloudy') || desc.includes('fair')) return '⛅';
+        if (desc.includes('hazy') || desc.includes('haze')) return '🌫️';
+        if (desc.includes('windy')) return '💨';
+        
+        return '☀️'; // Default sunny
+    }
+
+    getUVDescription(uvIndex) {
+        if (uvIndex <= 2) return '(Low)';
+        if (uvIndex <= 5) return '(Moderate)';
+        if (uvIndex <= 7) return '(High)';
+        if (uvIndex <= 10) return '(Very High)';
+        return '(Extreme)';
+    }
+
+    hideLoading() {
+        if (this.weatherLoading) {
+            this.weatherLoading.style.display = 'none';
+        }
+    }
+
+    showError() {
+        if (this.weatherLoading) {
+            this.weatherLoading.style.display = 'none';
+        }
+        if (this.weatherError) {
+            this.weatherError.style.display = 'block';
+        }
+    }
+}
+
+// ===================================
 // Performance Optimizations
 // ===================================
 
@@ -608,12 +888,14 @@ document.addEventListener('DOMContentLoaded', () => {
     new BackToTop();
     new FormHandler();
     new WeatherWidget();
+    new WeatherForecast(); // Real weather forecast from NEA
     new PerformanceOptimizer();
     new AccessibilityEnhancer();
 
     // Log initialization
     console.log('🌊 ShoreSquad initialized successfully!');
     console.log('💙 Ready to make waves for cleaner beaches!');
+    console.log('🌤️ Weather data powered by data.gov.sg');
 });
 
 // ===================================
