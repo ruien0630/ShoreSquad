@@ -2,23 +2,34 @@
    ShoreSquad - Custom Properties
    =================================== */
 :root {
-    /* Color Palette */
-    --color-primary: #0EA5E9;
-    --color-primary-dark: #0284C7;
-    --color-primary-light: #38BDF8;
-    --color-secondary: #F5DEB3;
-    --color-accent: #FF6B6B;
-    --color-success: #10B981;
-    --color-dark: #1E293B;
-    --color-dark-light: #334155;
-    --color-light: #F8FAFC;
+    /* Color Palette - Sunset & Beach Vibes */
+    --color-primary: #FF6B35;
+    --color-primary-dark: #E55A2B;
+    --color-primary-light: #FF8C5A;
+    --color-secondary: #F4E4C1;
+    --color-accent: #FF9A76;
+    --color-success: #87CEEB;
+    --color-dark: #2C1810;
+    --color-dark-light: #5D4037;
+    --color-light: #FFF8F0;
     --color-white: #FFFFFF;
-    --color-text: #1E293B;
-    --color-text-light: #64748B;
+    --color-text: #3E2723;
+    --color-text-light: #8D6E63;
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-    --gradient-hero: linear-gradient(180deg, rgba(14, 165, 233, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
+    /* Beach & Sunset Colors */
+    --sunset-orange: #FF6B35;
+    --sunset-pink: #FF9AA2;
+    --sunset-purple: #B565A7;
+    --sand-light: #F4E4C1;
+    --sand-medium: #E6D5B8;
+    --ocean-blue: #87CEEB;
+    --ocean-teal: #4DB8E8;
+    
+    /* Gradients - Sunset Ombre */
+    --gradient-primary: linear-gradient(135deg, #FF6B35 0%, #FF9AA2 50%, #B565A7 100%);
+    --gradient-hero: linear-gradient(180deg, #FFB347 0%, #FF9AA2 40%, #B565A7 80%, #4DB8E8 100%);
+    --gradient-sunset: linear-gradient(to bottom, #FFB347, #FF9AA2, #B565A7, #6B5B95);
+    --gradient-beach: linear-gradient(135deg, #F4E4C1 0%, #E6D5B8 50%, #87CEEB 100%);
     
     /* Spacing */
     --spacing-xs: 0.5rem;
@@ -86,7 +97,8 @@ body {
     font-size: var(--font-size-sm);
     line-height: var(--line-height-normal);
     color: var(--color-text);
-    background-color: var(--color-white);
+    background: var(--gradient-hero);
+    background-attachment: fixed;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -180,9 +192,9 @@ a:hover {
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 248, 240, 0.95);
     backdrop-filter: blur(10px);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 15px rgba(255, 107, 53, 0.1);
     z-index: var(--z-fixed);
     transition: transform var(--transition-base);
 }
@@ -380,7 +392,7 @@ a:hover {
    =================================== */
 .hero {
     padding: calc(80px + var(--spacing-3xl)) 0 var(--spacing-3xl);
-    background: var(--gradient-hero);
+    background: transparent;
     overflow: hidden;
 }
 
@@ -489,23 +501,21 @@ a:hover {
 .map-preview {
     width: 100%;
     height: 70%;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><rect fill="%230EA5E9" width="300" height="420"/><circle cx="150" cy="210" r="40" fill="%23FF6B6B"/><circle cx="100" cy="150" r="20" fill="%2310B981"/><circle cx="200" cy="280" r="25" fill="%23F59E0B"/></svg>');
-    background-size: cover;
-    opacity: 0.9;
-}
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420"><rect fill="%2387CEEB" width="300" height="420"/><circle cx="150" cy="210" r="40" fill="%23FF6B35"/><circle cx="100" cy="150" r="20" fill="%23FF9AA2"/><circle cx="200" cy="280" r="25" fill="%23FFB347"/></svg>');\n    background-size: cover;\n    opacity: 0.9;\n}
 
 .weather-widget {
     position: absolute;
     bottom: var(--spacing-md);
     left: var(--spacing-md);
     right: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 248, 240, 0.95);
     backdrop-filter: blur(10px);
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    box-shadow: 0 4px 15px rgba(255, 154, 162, 0.2);
 }
 
 .weather-icon {
@@ -546,7 +556,7 @@ section {
    Features Section
    =================================== */
 .features {
-    background: var(--color-light);
+    background: rgba(255, 248, 240, 0.6);
 }
 
 .features-grid {
@@ -556,18 +566,20 @@ section {
 }
 
 .feature-card {
-    background: var(--color-white);
+    background: rgba(255, 255, 255, 0.85);
     padding: var(--spacing-xl);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
     transition: all var(--transition-base);
     cursor: pointer;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 154, 162, 0.2);
 }
 
 .feature-card:hover,
 .feature-card:focus {
     transform: translateY(-8px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 12px 30px rgba(255, 154, 162, 0.3);
     outline: none;
 }
 
@@ -631,7 +643,7 @@ section {
    Next Cleanup Location Section
    =================================== */
 .next-cleanup {
-    background: var(--color-light);
+    background: rgba(244, 228, 193, 0.3);
 }
 
 .map-container {
@@ -669,11 +681,12 @@ section {
 }
 
 .cleanup-info {
-    background: var(--color-white);
+    background: rgba(255, 255, 255, 0.9);
     padding: var(--spacing-xl);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 15px rgba(255, 154, 162, 0.2);
     transition: all var(--transition-base);
+    backdrop-filter: blur(10px);
 }
 
 .cleanup-info:hover {
@@ -864,11 +877,12 @@ section {
 }
 
 .current-conditions {
-    background: var(--color-white);
+    background: rgba(255, 255, 255, 0.9);
     padding: var(--spacing-xl);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 6px 20px rgba(255, 154, 162, 0.25);
     margin-bottom: var(--spacing-xl);
+    backdrop-filter: blur(10px);
 }
 
 .current-conditions h3 {
@@ -887,13 +901,13 @@ section {
 .condition-item {
     text-align: center;
     padding: var(--spacing-md);
-    background: var(--color-light);
+    background: rgba(244, 228, 193, 0.5);
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
 }
 
 .condition-item:hover {
-    background: rgba(14, 165, 233, 0.1);
+    background: rgba(255, 154, 162, 0.2);
     transform: scale(1.05);
 }
 
@@ -942,7 +956,7 @@ section {
    Impact Section
    =================================== */
 .impact {
-    background: var(--color-dark);
+    background: linear-gradient(135deg, #6B5B95 0%, #5D4037 100%);
     color: var(--color-white);
 }
 
@@ -1002,7 +1016,7 @@ section {
    CTA Section
    =================================== */
 .cta-section {
-    background: var(--gradient-hero);
+    background: transparent;
 }
 
 .cta-content {
@@ -1046,7 +1060,7 @@ section {
 .form-input:focus {
     outline: none;
     border-color: var(--color-primary-dark);
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
 }
 
 .cta-note {
@@ -1058,7 +1072,7 @@ section {
    Footer
    =================================== */
 .footer {
-    background: var(--color-dark);
+    background: linear-gradient(to bottom, #5D4037, #3E2723);
     color: var(--color-white);
     padding: var(--spacing-3xl) 0 var(--spacing-xl);
 }
