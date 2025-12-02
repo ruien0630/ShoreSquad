@@ -702,6 +702,247 @@ class WeatherForecast {
 }
 
 // ===================================
+// Enquiry Chatbot
+// ===================================
+
+class ChatBot {
+    constructor() {
+        this.chatButton = null;
+        this.chatWindow = null;
+        this.chatMessages = null;
+        this.chatInput = null;
+        this.isOpen = false;
+        this.conversationHistory = [];
+        
+        this.init();
+    }
+
+    init() {
+        this.createChatElements();
+        this.attachEventListeners();
+        this.loadKnowledgeBase();
+    }
+
+    createChatElements() {
+        // Create chat button
+        this.chatButton = document.createElement('button');
+        this.chatButton.className = 'chat-button';
+        this.chatButton.innerHTML = '💬';
+        this.chatButton.setAttribute('aria-label', 'Open chat');
+        document.body.appendChild(this.chatButton);
+
+        // Create chat window
+        this.chatWindow = document.createElement('div');
+        this.chatWindow.className = 'chat-window';
+        this.chatWindow.innerHTML = `
+            <div class="chat-header">
+                <div class="chat-header-title">
+                    <span class="chat-header-icon">🌊</span>
+                    <div>
+                        <div class="chat-header-name">ShoreSquad Assistant</div>
+                        <div class="chat-header-status">Online</div>
+                    </div>
+                </div>
+                <button class="chat-close" aria-label="Close chat">×</button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message bot-message">
+                    <div class="chat-message-avatar">🤖</div>
+                    <div class="chat-message-content">
+                        <div class="chat-message-text">Hi! 👋 I'm the ShoreSquad Assistant. How can I help you today?</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." aria-label="Chat message">
+                <button class="chat-send" id="chatSend" aria-label="Send message">➤</button>
+            </div>
+        `;
+        document.body.appendChild(this.chatWindow);
+
+        this.chatMessages = document.getElementById('chatMessages');
+        this.chatInput = document.getElementById('chatInput');
+        this.chatSendButton = document.getElementById('chatSend');
+        this.chatClose = this.chatWindow.querySelector('.chat-close');
+    }
+
+    attachEventListeners() {
+        // Toggle chat window
+        this.chatButton.addEventListener('click', () => this.toggleChat());
+        this.chatClose.addEventListener('click', () => this.closeChat());
+
+        // Send message
+        this.chatSendButton.addEventListener('click', () => this.sendMessage());
+        this.chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.sendMessage();
+            }
+        });
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.closeChat();
+            }
+        });
+    }
+
+    loadKnowledgeBase() {
+        this.knowledgeBase = {
+            greetings: ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'],
+            about: {
+                keywords: ['about', 'who are you', 'what is shoresquad', 'tell me about'],
+                response: "ShoreSquad is a community-driven initiative dedicated to keeping Singapore's beaches clean and beautiful! We organize regular beach cleanups, educational events, and work to raise awareness about marine conservation. 🌊"
+            },
+            events: {
+                keywords: ['event', 'cleanup', 'when', 'join', 'participate', 'volunteer'],
+                response: "We organize beach cleanups every Saturday morning at 8 AM at various beaches including East Coast Park and Pasir Ris! You can join us by signing up through our email form. We provide all necessary equipment and refreshments. 🧹🏖️"
+            },
+            location: {
+                keywords: ['where', 'location', 'beach', 'address', 'meet'],
+                response: "We operate at multiple beaches across Singapore, including East Coast Park, Pasir Ris Beach, Sentosa, and Changi Beach. Meeting points are shared via email when you sign up for an event. 📍"
+            },
+            signup: {
+                keywords: ['sign up', 'register', 'how to join', 'become member', 'email'],
+                response: "Great! You can sign up by entering your email in the form at the bottom of our homepage. We'll send you all the details about upcoming events and how to get involved! 📧"
+            },
+            impact: {
+                keywords: ['impact', 'statistics', 'achievement', 'how much', 'collected'],
+                response: "We're proud to have collected over 500kg of waste, organized 50+ cleanup events, and engaged 2000+ volunteers! Together, we're making a real difference for our marine ecosystems. 🌟"
+            },
+            donation: {
+                keywords: ['donate', 'support', 'contribute', 'help financially', 'money'],
+                response: "Thank you for wanting to support us! Currently, we're volunteer-run and don't accept monetary donations. However, you can help by joining our events, spreading awareness, or donating cleanup supplies! 💙"
+            },
+            equipment: {
+                keywords: ['equipment', 'bring', 'need', 'supplies', 'what to wear'],
+                response: "We provide gloves, trash bags, and grabbers. Just bring yourself, wear comfortable clothes and closed-toe shoes, and bring water and sunscreen! We recommend hats and long sleeves for sun protection. ☀️"
+            },
+            weather: {
+                keywords: ['weather', 'rain', 'cancel', 'postpone', 'forecast'],
+                response: "Check our real-time weather forecast on the homepage! If there's heavy rain or unsafe conditions, we'll notify registered participants via email. Light rain won't stop us - we're already getting wet at the beach! 🌦️"
+            },
+            contact: {
+                keywords: ['contact', 'email', 'phone', 'reach', 'get in touch'],
+                response: "You can reach us by signing up with your email on our homepage, and we'll be in touch! You can also find us on social media or attend one of our events to chat with our team directly. 📱"
+            },
+            thanks: {
+                keywords: ['thank', 'thanks', 'appreciate', 'grateful'],
+                response: "You're very welcome! Thank you for caring about our beaches and oceans! 🙏💙"
+            }
+        };
+    }
+
+    toggleChat() {
+        this.isOpen = !this.isOpen;
+        this.chatWindow.classList.toggle('chat-window--open');
+        this.chatButton.classList.toggle('chat-button--active');
+        
+        if (this.isOpen) {
+            this.chatInput.focus();
+            this.chatButton.innerHTML = '✕';
+        } else {
+            this.chatButton.innerHTML = '💬';
+        }
+    }
+
+    closeChat() {
+        this.isOpen = false;
+        this.chatWindow.classList.remove('chat-window--open');
+        this.chatButton.classList.remove('chat-button--active');
+        this.chatButton.innerHTML = '💬';
+    }
+
+    sendMessage() {
+        const message = this.chatInput.value.trim();
+        if (!message) return;
+
+        // Add user message
+        this.addMessage(message, 'user');
+        this.chatInput.value = '';
+
+        // Show typing indicator
+        this.showTypingIndicator();
+
+        // Generate and send bot response
+        setTimeout(() => {
+            this.removeTypingIndicator();
+            const response = this.generateResponse(message);
+            this.addMessage(response, 'bot');
+        }, 800 + Math.random() * 700);
+    }
+
+    addMessage(text, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${type}-message`;
+        
+        const avatar = type === 'bot' ? '🤖' : '👤';
+        
+        messageDiv.innerHTML = `
+            <div class="chat-message-avatar">${avatar}</div>
+            <div class="chat-message-content">
+                <div class="chat-message-text">${text}</div>
+            </div>
+        `;
+
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+
+        // Store in conversation history
+        this.conversationHistory.push({ text, type, timestamp: Date.now() });
+    }
+
+    showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'chat-message bot-message typing-indicator';
+        typingDiv.id = 'typingIndicator';
+        typingDiv.innerHTML = `
+            <div class="chat-message-avatar">🤖</div>
+            <div class="chat-message-content">
+                <div class="chat-typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        this.chatMessages.appendChild(typingDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+
+    removeTypingIndicator() {
+        const indicator = document.getElementById('typingIndicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    generateResponse(message) {
+        const lowerMessage = message.toLowerCase();
+
+        // Check for greetings
+        if (this.knowledgeBase.greetings.some(greeting => lowerMessage.includes(greeting))) {
+            return "Hello! 👋 How can I help you learn more about ShoreSquad today?";
+        }
+
+        // Check knowledge base
+        for (const [key, value] of Object.entries(this.knowledgeBase)) {
+            if (key === 'greetings') continue;
+            
+            if (value.keywords.some(keyword => lowerMessage.includes(keyword))) {
+                return value.response;
+            }
+        }
+
+        // Check for goodbye
+        if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
+            return "Thanks for chatting! Feel free to reach out anytime. Keep our beaches clean! 🌊💙";
+        }
+
+        // Default response
+        return "That's a great question! While I'm still learning, I can help you with information about our events, how to join, our impact, and general questions about ShoreSquad. You can also sign up with your email on our homepage for more detailed information! 😊";
+    }
+}
+
+// ===================================
 // Performance Optimizations
 // ===================================
 
@@ -889,6 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     new FormHandler();
     new WeatherWidget();
     new WeatherForecast(); // Real weather forecast from NEA
+    new ChatBot(); // Enquiry chatbot
     new PerformanceOptimizer();
     new AccessibilityEnhancer();
 
@@ -896,6 +1138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🌊 ShoreSquad initialized successfully!');
     console.log('💙 Ready to make waves for cleaner beaches!');
     console.log('🌤️ Weather data powered by data.gov.sg');
+    console.log('💬 Chatbot ready to answer questions!');
 });
 
 // ===================================
